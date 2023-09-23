@@ -13,7 +13,7 @@ public class Instance {
     private List<String> tray = new ArrayList<>();
     private String[][] field = new String[15][15];
     public void run(String s) {
-        System.out.println("Welcome to Crossword Scrabble\n");
+        System.out.println("Welcome to Crossword Scrabble");
 
         fill();
 
@@ -25,7 +25,7 @@ public class Instance {
     }
 
     private void print() {
-        System.out.println("  1 2 3 4 5 6 7 8 9 A B C D E F");
+        System.out.println("\n  1 2 3 4 5 6 7 8 9 A B C D E F");
 
         for (int i = 0; i < 15; i++) {
             System.out.printf("%s %s\n", Integer.toHexString(i + 1).toUpperCase(), String.join(" ", field[i]));
@@ -83,43 +83,68 @@ public class Instance {
             case "a", "place" -> place(com);
             case "b", "pick" -> pick();
             case "c", "exit" -> exit();
+            default -> System.out.println("Invalid command");
         }
     }
 
     private void place(String[] com) {
-        List<String> list = new ArrayList<>(List.of(com[1].toUpperCase().split("")));
+        String err = "";
+
+        try {
+            List<String> list = new ArrayList<>(List.of(com[1].toUpperCase().split("")));
+            RuntimeException ex = new RuntimeException("Invalid position. Position out of range.");
+            List<String> invalid;
+
+            if (tray.size() == 0) {
+                throw new RuntimeException("Your tray is empty.");
+            } else if ((invalid = checkIfNot(list)).size() != 0){
+                throw new RuntimeException(String.format("Invalid letter. Letter %s is not in the tray.\n", invalid.get(0)));
+            }
 
 
+            int row = Integer.valueOf(com[2], 16) - 1;
+            int col = Integer.valueOf(com[3], 16) - 1;
 
-        if (tray.size() == 0) {
-            System.out.println("Your tray is empty.");
-            return;
-        } else if (checkIfNot(list)){
-            System.out.println("");
-            return;
+            if (row > 14 || col > 14 || row < 0 || col < 0) {
+                throw ex;
+            }
+
+            switch (com[4]) {
+                case "dwn", "down" -> {
+                    for (int i = 0; i < list.size(); i++) {
+                        if (field[i + row][col].equals("#")) {
+                            throw ex;
+                        }
+
+                        field[i + row][col] = list.get(i);
+                    }
+                }
+                case "acr", "across" -> {
+                    for (int i = 0; i < list.size(); i++) {
+                        if (field[row][i + col].equals("#")) {
+                            throw ex;
+                        }
+
+                        field[row][i + col] = list.get(i);
+                    }
+                }
+                default -> throw new RuntimeException("Invalid direction.");
+            }
+        } catch (NumberFormatException e) {
+            err = "Invalid command. Use 'Place Word row(Hexadecimal) column(Hexadecimal) DIRECTION'.";
+        } catch (IndexOutOfBoundsException ignored) {
+
+        } catch (RuntimeException e) {
+            err = e.getMessage();
         }
 
-
-        int row = Integer.parseInt(com[2]) - 1;
-        int col = Integer.valueOf(com[3], 16) - 1;
-
-        switch (com[4]) {
-            case "dwn" -> {
-                for (int i = row; i < list.size(); i++) {
-                    field[i][col] = list.remove(0);
-                }
-            }
-            case "acr" -> {
-                for (int i = col; i < list.size(); i++) {
-                    field[row][i] = list.remove(0);
-                }
-            }
-            default -> System.out.println("Invalid");
-        }
+        if (err.length() != 0) printAll("\n" + err);
+        else printAll();
     }
 
-    private boolean checkIfNot(List<String> list) {
-        return list.stream().filter(e -> !tray.contains(e)).toList().size() != 0;
+    private List<String> checkIfNot(List<String> list) {
+        //return list.stream().filter(e -> !tray.contains(e)).toList().size() != 0;
+        return list.stream().filter(e -> Collections.frequency(list, e) > Collections.frequency(tray, e)).toList();
     }
 
     private void shuffle() {
@@ -158,6 +183,13 @@ public class Instance {
 
     private void printAll() {
         print();
+        printTray();
+        printBag();
+    }
+
+    private void printAll(String err) {
+        print();
+        System.out.println(err);
         printTray();
         printBag();
     }
