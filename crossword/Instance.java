@@ -56,7 +56,7 @@ public class Instance {
 
             String com = sc.nextLine().toLowerCase().trim();
 
-            if (!com.matches("[a-c]|((place|a) [a-z_0-9\\s]+|pick|exit)")) {
+            if (!com.matches("[a-c]|((place|a) .+|place|pick|exit)")) {
                 System.out.println("\nInvalid Command.");
                 continue;
             }
@@ -89,16 +89,18 @@ public class Instance {
 
     private void place(String[] com) {
         String err = "";
+        List<String> list;
+        RuntimeException ex = new RuntimeException("Invalid position. Position out of range.");
+        RuntimeException errHex = new RuntimeException("Invalid command. Use 'Place Word row(Hexadecimal) column(Hexadecimal) DIRECTION'.");
+        List<String> invalid;
 
         try {
-            List<String> list = new ArrayList<>(List.of(com[1].toUpperCase().split("")));
-            RuntimeException ex = new RuntimeException("Invalid position. Position out of range.");
-            List<String> invalid;
-
             if (tray.size() == 0) {
                 throw new RuntimeException("Your tray is empty.");
-            } else if ((invalid = checkIfNot(list)).size() != 0){
-                throw new RuntimeException(String.format("Invalid letter. Letter %s is not in the tray.\n", invalid.get(0)));
+            } else if (com.length < 5 || !String.join(" ", com).matches("(place|a) .+ [a-f0-9]\\s[a-f0-9]\\s[a-z]+")) {
+                throw errHex;
+            } else if ((invalid = checkIfNot((list = List.of(com[1].toUpperCase().split(""))))).size() != 0){
+                throw new RuntimeException(String.format("Invalid letter. Letter %s is not in the tray.", invalid.get(0)));
             }
 
 
@@ -130,10 +132,8 @@ public class Instance {
                 }
                 default -> throw new RuntimeException("Invalid direction.");
             }
-        } catch (NumberFormatException e) {
-            err = "Invalid command. Use 'Place Word row(Hexadecimal) column(Hexadecimal) DIRECTION'.";
-        } catch (IndexOutOfBoundsException ignored) {
-
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            err = errHex.getMessage();
         } catch (RuntimeException e) {
             err = e.getMessage();
         }
@@ -174,9 +174,20 @@ public class Instance {
 
         List<String> list = List.of("DSCBLWORRBAOSE".split(""));
 
-        tray.addAll(list);
+        if (!tray.containsAll(list)) {
+            tray.addAll(list);
 
-        bag.removeAll(list);
+            list.forEach(e -> bag.remove(e));
+        }
+
+
+
+//        list.forEach(e -> {
+//            if (!bag.remove(e)) bag.remove("*");
+//        });
+
+        //tray.addAll(list.stream().filter(e -> bag.remove(e)).toList());
+        //bag.remove("A");
 
         printAll();
     }
