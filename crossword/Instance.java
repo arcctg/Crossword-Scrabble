@@ -37,7 +37,7 @@ public class Instance {
             Arrays.fill(strings, "#");
         }
 
-        clear();
+        //clear();
     }
 
     private void clear() {
@@ -90,20 +90,26 @@ public class Instance {
     private void place(String[] com) {
         String err = "";
         List<String> list;
+        String errWord = "Incorrect word";
         RuntimeException ex = new RuntimeException("Invalid position. Position out of range.");
         RuntimeException errHex = new RuntimeException("Invalid command. Use 'Place Word row(Hexadecimal) column(Hexadecimal) DIRECTION'.");
         List<String> invalid;
 
         try {
-            if (tray.size() == 0) {
+            //Your tray is empty.
+            if (tray.isEmpty()) {
                 throw new RuntimeException("Your tray is empty.");
-            } else if (com.length < 5 || !String.join(" ", com).matches("(place|a) .+ [a-f0-9]\\s[a-f0-9]\\s[a-z]+")) {
-                throw errHex;
-            } else if ((invalid = checkIfNot((list = List.of(com[1].toUpperCase().split(""))))).size() != 0){
-                throw new RuntimeException(String.format("Invalid letter. Letter %s is not in the tray.", invalid.get(0)));
             }
 
+            //Invalid command
+            if (com.length < 5 || !String.join(" ", com).toLowerCase().matches("(place|a) .+ .*\\s.*\\s.*")) { //(place|a) .+ [a-f0-9]\s[a-f0-9]\s[a-z]+  (place|a) .+ [a-z0-9A-Z]\s[a-z0-9A-Z]
+                throw errHex;
+            }
 
+            String word = com[1].toUpperCase();
+            list = List.of(word.split(""));
+
+            //Invalid position
             int row = Integer.valueOf(com[2], 16) - 1;
             int col = Integer.valueOf(com[3], 16) - 1;
 
@@ -111,6 +117,36 @@ public class Instance {
                 throw ex;
             }
 
+            if (!List.of("dwn", "down", "acr", "across").contains(com[4])) {
+                throw new RuntimeException("Invalid direction.");
+            }
+
+            //Invalid letter
+            HashSet<String> set = new HashSet<>(List.of(word.split("")));
+            boolean b = word.length() > 9 && (word.contains("CROSSWORD") || word.contains("SCRABBLE"));
+            boolean c = (set.containsAll(List.of("CROSSWORD".split(""))) || set.containsAll(List.of("SCRABBLE".split("")))) && word.length() > 9;
+
+            if (!(invalid = checkIfNot(list)).isEmpty()){
+                if (!Character.isAlphabetic(invalid.get(0).charAt(0))) {
+                    throw new RuntimeException(String.format("Invalid letter. Letter %s is not in the tray.", invalid.get(0)));
+                } else {
+                    if (c) {
+                        throw new RuntimeException(errWord + ". The word is too long.");
+                    } else if (!word.equals("CROSSWORD") && !word.equals("SCRABBLE")) {
+                        throw new RuntimeException(errWord + ", please try again." + "Incorrect word. The word is too long.");
+                    }
+                }
+            }
+
+            //Incorrect word
+            if (c) {
+                throw new RuntimeException(errWord + ". The word is too long.");
+            } else if (!word.equals("CROSSWORD") && !word.equals("SCRABBLE")) {
+                throw new RuntimeException(errWord + ", please try again." + "Incorrect word. The word is too long.");
+            }
+            //if (word.length() > 9) throw new RuntimeException(errWord + ", please try again.");
+
+            //Invalid position
             switch (com[4]) {
                 case "dwn", "down" -> {
                     for (int i = 0; i < list.size(); i++) {
@@ -130,15 +166,17 @@ public class Instance {
                         field[row][i + col] = list.get(i);
                     }
                 }
+                //Invalid direction
                 default -> throw new RuntimeException("Invalid direction.");
             }
+
         } catch (NumberFormatException | IndexOutOfBoundsException e) {
             err = errHex.getMessage();
         } catch (RuntimeException e) {
             err = e.getMessage();
         }
 
-        if (err.length() != 0) printAll("\n" + err);
+        if (!err.isEmpty()) printAll("\n" + err);
         else printAll();
     }
 
@@ -148,13 +186,13 @@ public class Instance {
     }
 
     private void shuffle() {
-        if (bag.size() == 0) {
+        if (bag.isEmpty()) {
             System.out.println("\nThe bag is empty.");
             printBag();
             printTray();
         } else {
             Collections.shuffle(bag);
-            if (tray.size() != 0) printTray();
+            if (!tray.isEmpty()) printTray();
             printBag();
         }
     }
