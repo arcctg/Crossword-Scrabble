@@ -12,14 +12,15 @@ public class Instance {
     private List<String> bag = new ArrayList<>();
     private List<String> tray = new ArrayList<>();
     private String[][] field = new String[15][15];
+    private ArrayList<String> fileLines = new ArrayList<>();
+
     public void run(String s) {
         System.out.println("Welcome to Crossword Scrabble");
 
         fill();
 
-        print();
-
         read(new File(s));
+        chRan();
 
         process();
     }
@@ -51,30 +52,60 @@ public class Instance {
     }
 
     private void process() {
-        while (true){
+        boolean go = true;
+
+        while (go){
             ask();
 
-            String com = sc.nextLine().toLowerCase().trim();
+            switch (sc.nextLine().toLowerCase().trim()) {
+                case "a", "shuffle" -> go = chRan();
+                case "b", "exit" -> exit(0);
 
-            if (!com.matches("[a-c]|((place|a) .+|place|pick|exit)")) {
-                System.out.println("\nInvalid Command.");
-                continue;
+                default -> System.out.println("Invalid command");
             }
-
-            useCom(com.split(" "));
         }
+
+        System.out.print("\nNo more puzzles. ");
+        exit(1);
     }
+
+    private boolean chRan() {
+        if (fileLines.isEmpty()) return false;
+        Random random = new Random();
+
+        String line = fileLines.remove(random.nextInt(fileLines.size()));
+
+        tray.clear();
+        tray.addAll(List.of(line.substring(0, line.indexOf(" ")).toUpperCase().split("")));
+        //Collections.shuffle(tray);
+
+        ArrayList<String> list = new ArrayList<>(List.of(split(line)));
+
+        draw(list);
+        return true;
+    }
+
+    private void draw(ArrayList<String> list) {
+        fill();
+
+        list.forEach(e -> place(e.split(" ")));
+
+        printAll();
+    }
+
+    private String[] split(String line) {
+        return line.substring(line.indexOf(" ") + 1).replaceAll("((?:\\w+\\s+){4})", "$1###").split("###");
+    }
+
 
     private void ask() {
         System.out.println("""
                 
                 What would you like to do?
 
-                A. Place
+                A. Shuffle
 
-                B. Pick
-
-                C. Exit
+                B. Exit
                 """);
     }
 
@@ -82,7 +113,7 @@ public class Instance {
         switch (com[0]) {
             case "a", "place" -> place(com);
             case "b", "pick" -> pick();
-            case "c", "exit" -> exit();
+            case "c", "exit" -> exit(1);
             default -> System.out.println("Invalid command");
         }
     }
@@ -97,72 +128,70 @@ public class Instance {
 
         try {
             //Your tray is empty.
-            if (tray.isEmpty()) {
-                throw new RuntimeException("Your tray is empty.");
-            }
+//            if (tray.isEmpty()) {
+//                throw new RuntimeException("Your tray is empty.");
+//            }
 
             //Invalid command
-            if (com.length < 5 || !String.join(" ", com).toLowerCase().matches("(place|a) .+ .*\\s.*\\s.*")) { //(place|a) .+ [a-f0-9]\s[a-f0-9]\s[a-z]+  (place|a) .+ [a-z0-9A-Z]\s[a-z0-9A-Z]
-                throw errHex;
-            }
+//            if (com.length < 5 || !String.join(" ", com).toLowerCase().matches("(place|a) .+ .*\\s.*\\s.*")) { //(place|a) .+ [a-f0-9]\s[a-f0-9]\s[a-z]+  (place|a) .+ [a-z0-9A-Z]\s[a-z0-9A-Z]
+//                throw errHex;
+//            }
 
-            String word = com[1].toUpperCase();
+            String word = com[0].toUpperCase();
+            int row = Integer.parseInt(com[1]) - 1;
+            int col = Integer.parseInt(com[2]) - 1;
+            String dir = com[3].trim().toLowerCase();
+
             list = List.of(word.split(""));
 
             //Invalid position
-            int row = Integer.valueOf(com[2], 16) - 1;
-            int col = Integer.valueOf(com[3], 16) - 1;
+
+//            int row = Integer.valueOf(com[2], 16) - 1; Hexadecimal to decimal
+//            int col = Integer.valueOf(com[3], 16) - 1;
+
 
             if (row > 14 || col > 14 || row < 0 || col < 0) {
                 throw ex;
             }
 
-            if (!List.of("dwn", "down", "acr", "across").contains(com[4])) {
+            if (!List.of("dwn", "down", "acr", "across").contains(dir)) {
                 throw new RuntimeException("Invalid direction.");
             }
 
             //Invalid letter
-            HashSet<String> set = new HashSet<>(List.of(word.split("")));
-            boolean b = word.length() > 9 && (word.contains("CROSSWORD") || word.contains("SCRABBLE"));
-            boolean c = (set.containsAll(List.of("CROSSWORD".split(""))) || set.containsAll(List.of("SCRABBLE".split("")))) && word.length() > 9;
-
-            if (!(invalid = checkIfNot(list)).isEmpty()){
-                if (!Character.isAlphabetic(invalid.get(0).charAt(0))) {
-                    throw new RuntimeException(String.format("Invalid letter. Letter %s is not in the tray.", invalid.get(0)));
-                } else {
-                    if (c) {
-                        throw new RuntimeException(errWord + ". The word is too long.");
-                    } else if (!word.equals("CROSSWORD") && !word.equals("SCRABBLE")) {
-                        throw new RuntimeException(errWord + ", please try again." + "Incorrect word. The word is too long.");
-                    }
-                }
-            }
-
-            //Incorrect word
-            if (c) {
-                throw new RuntimeException(errWord + ". The word is too long.");
-            } else if (!word.equals("CROSSWORD") && !word.equals("SCRABBLE")) {
-                throw new RuntimeException(errWord + ", please try again." + "Incorrect word. The word is too long.");
-            }
+//            HashSet<String> set = new HashSet<>(List.of(word.split("")));
+//            boolean b = word.length() > 9 && (word.contains("CROSSWORD") || word.contains("SCRABBLE"));
+//            boolean c = (set.containsAll(List.of("CROSSWORD".split(""))) || set.containsAll(List.of("SCRABBLE".split("")))) && word.length() > 9;
+//
+//            if (!(invalid = checkIfNot(list)).isEmpty()){
+//                if (!Character.isAlphabetic(invalid.get(0).charAt(0))) {
+//                    throw new RuntimeException(String.format("Invalid letter. Letter %s is not in the tray.", invalid.get(0)));
+//                } else {
+//                    if (c) {
+//                        throw new RuntimeException(errWord + ". The word is too long.");
+//                    } else if (!word.equals("CROSSWORD") && !word.equals("SCRABBLE")) {
+//                        throw new RuntimeException(errWord + ", please try again." + "Incorrect word. The word is too long.");
+//                    }
+//                }
+//            }
+//
+//            //Incorrect word
+//            if (c) {
+//                throw new RuntimeException(errWord + ". The word is too long.");
+//            } else if (!word.equals("CROSSWORD") && !word.equals("SCRABBLE")) {
+//                throw new RuntimeException(errWord + ", please try again." + "Incorrect word. The word is too long.");
+//            }
             //if (word.length() > 9) throw new RuntimeException(errWord + ", please try again.");
 
             //Invalid position
-            switch (com[4]) {
+            switch (dir) {
                 case "dwn", "down" -> {
                     for (int i = 0; i < list.size(); i++) {
-                        if (field[i + row][col].equals("#")) {
-                            throw ex;
-                        }
-
                         field[i + row][col] = list.get(i);
                     }
                 }
                 case "acr", "across" -> {
                     for (int i = 0; i < list.size(); i++) {
-                        if (field[row][i + col].equals("#")) {
-                            throw ex;
-                        }
-
                         field[row][i + col] = list.get(i);
                     }
                 }
@@ -175,9 +204,6 @@ public class Instance {
         } catch (RuntimeException e) {
             err = e.getMessage();
         }
-
-        if (!err.isEmpty()) printAll("\n" + err);
-        else printAll();
     }
 
     private List<String> checkIfNot(List<String> list) {
@@ -233,33 +259,29 @@ public class Instance {
     private void printAll() {
         print();
         printTray();
-        printBag();
+        //printBag();
     }
 
     private void printAll(String err) {
         print();
         System.out.println(err);
         printTray();
-        printBag();
+        //printBag();
     }
 
-    private void exit() {
-        System.out.println("\nBye.");
+    private void exit(int a) {
+        System.out.println((a == 0 ? "\n" : "") + "Bye.");
         System.exit(0);
     }
 
     private void read(File file) {
         if (file.exists() && file.isFile()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))){
-                HashMap<Character, Integer> map = new HashMap<>();
-
-                reader.lines().forEach(e -> map.put(e.charAt(0), Integer.parseInt(e.substring(2))));
-
-                fillBag(map);
+                reader.lines().forEach(fileLines::add);
             } catch (IOException ignored) {}
         } else {
             System.out.println("File not found!");
-            exit();
+            exit(1);
         }
     }
 
