@@ -11,7 +11,6 @@ public class Instance {
     private final Scanner sc = new Scanner(System.in);
     private List<String> tray = new ArrayList<>();
     private String[][] field = new String[15][15];
-    private ArrayList<String> fileLines = new ArrayList<>();
     private ArrayList<Puzzle> puzzles;
     private ArrayList<Word> words = new ArrayList<>();
     private int countW = 0;
@@ -50,16 +49,12 @@ public class Instance {
             String com = sc.nextLine().toLowerCase().trim();
 
             if (!com.matches("[a-d]|((place|a|hint|b) .+|new\\s+puzzle|exit)")) {
-                //System.out.println("\nInvalid command. Use 'Place Word row(Hexadecimal) column(Hexadecimal) DIRECTION");
                 printAll("Invalid command. Use 'Place Word row(Hexadecimal) column(Hexadecimal) DIRECTION'.");
                 continue;
             }
 
             useCom(com);
         }
-//
-//        System.out.print("\nNo more puzzles. ");
-//        exit(1);
     }
 
     private void chRan(boolean print) {
@@ -71,11 +66,6 @@ public class Instance {
 
         Puzzle puzzle = puzzles.remove(random.nextInt(puzzles.size()));
         words = new ArrayList<>(puzzle.getWords());
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException e) {
-//            System.out.println("err thread");;
-//        }
         countW = 0;
 
         tray.clear();
@@ -92,18 +82,6 @@ public class Instance {
         }
 
         if (print) printAll();
-    }
-
-    private void draw(ArrayList<String> list) {
-        fill();
-
-        list.forEach(e -> place(e.split(" "), true));
-
-        printAll();
-    }
-
-    private String[] split(String line) {
-        return line.substring(line.indexOf(" ") + 1).replaceAll("((?:\\w+\\s+){4})", "$1###").split("###");
     }
 
 
@@ -138,13 +116,6 @@ public class Instance {
 
             default -> System.out.println("\nInvalid command");
         }
-
-//        switch (com[0]) {
-//            case "a", "place" -> place(com);
-//            case "b", "pick" -> pick();
-//            case "c", "exit" -> exit();
-//            default -> System.out.println("Invalid command");
-//        }
     }
 
     private void hint(String[] com) {
@@ -195,11 +166,6 @@ public class Instance {
             if (!String.join(" ", com).matches("\\w+\\s+[\\da-f]+\\s+[\\da-f]+\\s+\\w+") && !prep) throw new NumberFormatException();
             String word = com[0].toUpperCase();
 
-//            if (word.equalsIgnoreCase("end")) {
-//                words.clear();
-//                throw new RuntimeException("End");
-//            }
-
             list = List.of(word.split(""));
 
             if (!(invalid = checkIfNot(list)).isEmpty() && !Character.isAlphabetic(invalid.get(0).charAt(0))){
@@ -229,7 +195,6 @@ public class Instance {
                 }
 
                 if (rightWord == null) {
-                    //throw new RuntimeException("rightWord == null");
                     throw ex;
                 }
 
@@ -245,7 +210,6 @@ public class Instance {
 
 
             if (row > 14 || col > 14 || row < 0 || col < 0 || !List.of("dwn", "down", "acr", "across").contains(dir)) {
-                //throw new RuntimeException("pos or !List.of(\"dwn\", \"down");
                 throw ex;
             }
 
@@ -268,7 +232,6 @@ public class Instance {
             }
 
             if (!prep) {
-                //words.remove(rightWord);
                 countW++;
             }
         } catch (NumberFormatException | IndexOutOfBoundsException e) {
@@ -280,12 +243,6 @@ public class Instance {
                 err = ultimateEx.getMessage() + e.getMessage();
             }
         }
-
-//    } catch (NumberFormatException | IndexOutOfBoundsException e) {
-//        err = errHex.getMessage();
-//    } catch (RuntimeException e) {
-//        err = e.getMessage();
-//    }
 
         if (!prep) {
             if (countW - 1 == words.size()) {
@@ -347,13 +304,6 @@ public class Instance {
                 puzzles = mapper.readValue(file, Puzzles.class).getPuzzles();
             } catch (IOException ignored) {}
 
-//            try (BufferedReader reader = new BufferedReader(new FileReader(file))){
-//                Puzzles puzzles = mapper.read;
-//                for (Puzzle puzzle : puzzles.getPuzzles()) {
-//                    System.out.println(puzzle.getLetter());
-//                }
-//                //reader.lines().forEach(fileLines::add);
-//            } catch (IOException ignored) {}
         } else {
             System.out.println("File not found!");
             exit(0);
