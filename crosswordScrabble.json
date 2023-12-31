@@ -104,7 +104,7 @@
     "letter": "Edition",
     "words": [
       {
-        "word": " Edition ",
+        "word": "Edition",
         "position": "5 7",
         "direction": "ACR",
         "hint": "Version of a published text."
@@ -129,7 +129,7 @@
       },
       {
         "word": "End",
-        "position": "7 10",
+        "position": "7 9",
         "direction": "ACR",
         "hint": "A final part of something"
       },
@@ -312,7 +312,7 @@
       },
       {
         "word": "Sparrow",
-        "position": "6 8",
+          "position": "6 8",
         "direction": "DWN",
         "hint": "Small Old World bird related to the weaver birds"
       }
